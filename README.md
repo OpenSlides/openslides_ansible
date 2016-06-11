@@ -42,9 +42,30 @@ Example Playbook
 
 Install openslides from git
 ```yml
-    - hosts: servers
-      roles:
-         - { role: openslides, openslides_secure_key: RandomString, openslides_use_git: true }
+---
+- hosts: openslides
+  gather_facts: False
+
+  vars:
+    openslides_secure_key: MySecureKey  # Secure Key for django. Should be changed
+    openslides_nginx_global: yes  # Let openslides listen on any nginx domain
+    openslides_use_git: true
+
+  pre_tasks:
+  - name: Install python2
+    become: yes
+    raw: apt-get -y install python
+
+  - setup: ''
+
+  - name: Update System
+    apt:
+      update_cache: yes
+      upgrade: dist
+      cache_valid_time: 3600
+
+  roles:
+  - ostcar.OpenSlides
 ```
 
 
