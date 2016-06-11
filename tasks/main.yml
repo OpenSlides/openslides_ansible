@@ -1,0 +1,217 @@
+---
+- name: Check variable openslides_secure_key
+  when: not openslides_secure_key
+  fail:
+    msg: The variable openslides_secure_key is not set.
+
+- name: Setup ubuntu 16.04
+  when: ansible_distribution == "Ubuntu" and ansible_distribution_version == "16.04"
+  include: ubuntu16.04.yml
+
+- name: Setup Archlinux
+  when: ansible_distribution == "Archlinux"
+  include: archlinux.yml
+
+- name: Check Setup
+  when: not openslides_distro_fround
+  fail:
+    msg: openslides_distro_fround
+
+- name: Create user openslides
+  become: yes
+  user:
+    name: openslides
+    system: yes
+    createhome: no
+    state: present
+
+- name: Install openslides from pypi
+  when: not openslides_use_git
+  become: yes
+  pip:
+    name: openslides
+    executable: "{{ pip_executable }}"
+    state: present
+
+- name: Create directory for openslides_repo
+  when: openslides_use_git
+  become: yes
+  file:
+    path: /var/cache/openslides_repo
+    state: directory
+    owner: openslides
+
+- name: Create home directory for user openslides, npm needs it...
+  when: openslides_use_git
+  become: yes
+  file:
+    path: /home/openslides
+    state: directory
+    owner: openslides
+
+- name: Checkout openslides repo
+  when: openslides_use_git
+  become: yes
+  become_user: openslides
+  register: OpenSlidesGit
+  git:
+    repo: "{{ openslides_git_repo }}"
+    dest: /var/cache/openslides_repo
+    version: "{{ openslides_git_branch }}"
+
+- name: Install npm deps
+  when: openslides_use_git and OpenSlidesGit.changed
+  become: yes
+  become_user: openslides
+  become_method: su  # TO make ubuntu happy
+  npm:
+    path: /var/cache/openslides_repo
+
+- name: Install openslides from repo
+  when: openslides_use_git and OpenSlidesGit.changed
+  become: yes
+  pip:
+    name: file:///var/cache/openslides_repo
+    executable: "{{ pip_executable }}"
+    state: latest
+
+- name: Install asgi_redis via pip
+  become: yes
+  pip:
+    name: asgi_redis
+    executable: "{{ pip_executable }}"
+    state: present
+
+- name: Create settings path
+  become: yes
+  file:
+    path: "{{ openslides_settings_path }}"
+    state: directory
+    mode: 0755
+
+- name: create user data path
+  become: yes
+  file:
+    path: "{{ openslides_user_data_path }}"
+    state: directory
+    mode: 0755
+    owner: openslides
+
+- name: Create Settings
+  become: yes
+  template:
+    dest: "{{ openslides_settings_path }}/settings.py"
+    src: settings.py.j2
+
+- name: Migrate Database
+  become: yes
+  become_user: openslides
+  register: openslidesMigratedDatabase
+  command: "{{ openslides_bin }} migrate --pythonpath {{ openslides_settings_path }} --settings settings --noinput"
+  args:
+    creates: "{{ openslides_user_data_path }}/database.sqlite"
+
+- name: Activate anonymous user
+  when: openslidesMigratedDatabase.changed
+  become: yes
+  shell: echo "from openslides.core.config import config;config['general_system_enable_anonymous']=True" | {{ openslides_bin }} shell --pythonpath {{ openslides_settings_path }} --settings settings
+
+- name: Collect Static
+  become: yes
+  become_user: openslides
+  command: "{{ openslides_bin }} collectstatic --pythonpath {{ openslides_settings_path }} --settings settings --noinput"
+  args:
+    creates: "{{ openslides_user_data_path }}/collected_static/css"
+
+- name: Create systemd service for openslides-proxy
+  become: yes
+  register: createServices
+  template:
+    dest: /etc/systemd/system/{{ item }}
+    src: "{{ item }}.j2"
+  with_items:
+  - openslides.service
+  - proxy-to-openslides.service
+  - proxy-to-openslides.socket
+  - openslides_worker@.service
+  # See https://github.com/andrewgodwin/daphne/issues/17
+  # - /etc/systemd/system/openslides.socket
+
+- name: Create nginx vhost config
+  when: openslides_nginx_domains
+  become: yes
+  template:
+    dest: "/etc/nginx/sites-enabled/{{ item }}"
+    src: nginx_vhost.conf.j2
+  notify:
+  - Restart nginx
+  with_items: "{{ openslides_nginx_domains }}"
+
+- name: Create nginx global config
+  when: openslides_nginx_global
+  become: yes
+  template:
+    dest: /etc/nginx/nginx.conf
+    src: nginx.conf.j2
+  notify:
+  - Restart nginx
+
+- name: Create nginx service unit for socket activation
+  when: openslides_nginx_socket_activation
+  become: yes
+  register: createNginxService
+  template:
+    dest: /etc/systemd/system/nginx.service
+    src: nginx.service.j2
+
+- name: Create nginx socket
+  when: openslides_nginx_socket_activation
+  become: yes
+  register: createNginxSocket
+  template:
+    dest: /etc/systemd/system/nginx.socket
+    src: nginx.socket.j2
+
+- name: Reload systemd units
+  # TODO: there is a systemd module in ansible 2.2
+  when: createServices.changed or createNginxService or createNginxSocket
+  command: systemctl daemon-reload
+  become: yes
+
+- name: Start redis
+  become: yes
+  service:
+    name: redis
+    enabled: yes
+    state: started
+
+#   # See https://github.com/andrewgodwin/daphne/issues/17
+# - name: Start and enalbe openslides via socket activation
+#   become: yes
+#   service:
+#     name: proxy-to-openslides.socket
+#     enabled: yes
+#     state: started
+
+- name: Start and enalbe openslides
+  become: yes
+  service:
+    name: openslides.service
+    enabled: yes
+    state: started
+
+- name: Start and enalbe nginx via socket activation
+  when: openslides_nginx_socket_activation
+  become: yes
+  service:
+    name: nginx.socket
+    enabled: yes
+    state: started
+
+- name: Start and enalbe nginx without socket activation
+  when: not openslides_nginx_socket_activation
+  become: yes
+  service:
+    name: nginx.service
+    enabled: yes
+    state: started

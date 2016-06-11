@@ -1,0 +1,8 @@
+[Unit]
+Description=Woker for openslides
+
+[Service]
+Environment=PYTHONPATH={{ openslides_settings_path }}
+Environment=DJANGO_SETTINGS_MODULE=settings
+ExecStart={{ openslides_bin }} runworker
+User=openslides

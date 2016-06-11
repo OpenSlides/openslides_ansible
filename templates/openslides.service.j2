@@ -1,0 +1,18 @@
+[Unit]
+Description=Presentation and assembly system
+Wants=network.target
+Requires=nginx.service
+Before=nginx.service
+{% for i in range(openslides_worker_count) %}
+Requires=openslides_worker@{{ i }}.service
+{% endfor %}
+
+[Service]
+Environment=PYTHONPATH={{ openslides_settings_path }}
+Environment=DJANGO_SETTINGS_MODULE=settings
+ExecStart={{ daphne_bin }} openslides.asgi:channel_layer -p {{ openslides_port }}
+NonBlocking=true
+User=openslides
+
+[Install]
+WantedBy=multi-user.target

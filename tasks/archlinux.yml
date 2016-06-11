@@ -1,0 +1,38 @@
+---
+- name: Install OpenSlides Dependencies
+  become: yes
+  become_method: su
+  pacman:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+  - sudo
+  - redis
+  - python-django
+  - python-beautifulsoup4
+  - python-html5lib
+  - python-reportlab
+
+- name: Install nginx
+  when: openslides_nginx_domains or openslides_nginx_global
+  become: yes
+  pacman:
+    name: nginx
+    state: present
+
+- name: Install git and development tools
+  when: openslides_use_git
+  become: yes
+  pacman:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - git
+  - npm
+
+- set_fact:
+    pip_executable: pip
+    openslides_distro_fround: true
+    openslides_bin: /usr/bin/openslides
+    daphne_bin: /usr/bin/daphne
