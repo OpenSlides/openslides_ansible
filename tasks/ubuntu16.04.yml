@@ -5,12 +5,6 @@
 #     content: |
 #       deb http://archive.ubuntu.com/ubuntu xenial main restricted universe
 
-- name: Update System
-  apt:
-    update_cache: yes
-    upgrade: dist
-    cache_valid_time: 3600
-
 - name: Install OpenSlides Dependencies
   apt:
     name: "{{ item }}"
@@ -41,7 +35,7 @@
   when: nginxInstalled.changed and (openslides_nginx_domains or openslides_nginx_global)
   service:
     name: nginx.service
-    state: stop
+    state: stopped
     enabled: no
 
 - name: Install git and development tools

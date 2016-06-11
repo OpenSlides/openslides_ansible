@@ -66,6 +66,25 @@
   become_method: su  # TO make ubuntu happy
   npm:
     path: /var/cache/openslides_repo
+    ignore_scripts: yes  # There seems to be a problem on ubuntu with our scripts
+
+- name: Install bower deps
+  when: openslides_use_git and OpenSlidesGit.changed
+  become: yes
+  become_user: openslides
+  become_method: su  # TO make ubuntu happy
+  bower:
+    path: /var/cache/openslides_repo
+    relative_execpath: node_modules/.bin
+
+- name: Call gulp
+  when: openslides_use_git and OpenSlidesGit.changed
+  become: yes
+  become_user: openslides
+  become_method: su  # TO make ubuntu happy
+  command: /var/cache/openslides_repo/node_modules/.bin/gulp
+  args:
+    chdir: /var/cache/openslides_repo/
 
 - name: Install openslides from repo
   when: openslides_use_git and OpenSlidesGit.changed
@@ -123,7 +142,7 @@
   args:
     creates: "{{ openslides_user_data_path }}/collected_static/css"
 
-- name: Create systemd service for openslides-proxy
+- name: Create systemd units for openslides
   become: yes
   register: createServices
   template:
@@ -131,11 +150,9 @@
     src: "{{ item }}.j2"
   with_items:
   - openslides.service
-  - proxy-to-openslides.service
-  - proxy-to-openslides.socket
   - openslides_worker@.service
   # See https://github.com/andrewgodwin/daphne/issues/17
-  # - /etc/systemd/system/openslides.socket
+  # - openslides.socket
 
 - name: Create nginx vhost config
   when: openslides_nginx_domains
@@ -184,14 +201,6 @@
     name: redis
     enabled: yes
     state: started
-
-#   # See https://github.com/andrewgodwin/daphne/issues/17
-# - name: Start and enalbe openslides via socket activation
-#   become: yes
-#   service:
-#     name: proxy-to-openslides.socket
-#     enabled: yes
-#     state: started
 
 - name: Start and enalbe openslides
   become: yes
