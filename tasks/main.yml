@@ -17,6 +17,25 @@
   fail:
     msg: openslides_distro_fround
 
+- name: Start redis
+  become: yes
+  service:
+    name: redis
+    enabled: yes
+    state: started
+
+- name: Start PostgresQL
+  become: yes
+  service:
+    name: postgresql
+    enabled: yes
+    state: started
+
+- name: Create PostgreSQL DB
+  become: yes
+  postgresql_db:
+    name: openslides
+
 - name: Create user openslides
   become: yes
   user:
@@ -82,7 +101,7 @@
   become: yes
   become_user: openslides
   become_method: su  # TO make ubuntu happy
-  command: /var/cache/openslides_repo/node_modules/.bin/gulp
+  command: /var/cache/openslides_repo/node_modules/.bin/gulp --production
   args:
     chdir: /var/cache/openslides_repo/
 
@@ -127,8 +146,6 @@
   become_user: openslides
   register: openslidesMigratedDatabase
   command: "{{ openslides_bin }} migrate --pythonpath {{ openslides_settings_path }} --settings settings --noinput"
-  args:
-    creates: "{{ openslides_user_data_path }}/database.sqlite"
 
 - name: Activate anonymous user
   when: openslidesMigratedDatabase.changed
@@ -161,7 +178,7 @@
     dest: "/etc/nginx/sites-enabled/{{ item }}"
     src: nginx_vhost.conf.j2
   notify:
-  - Restart nginx
+  - restart nginx
   with_items: "{{ openslides_nginx_domains }}"
 
 - name: Create nginx global config
@@ -171,7 +188,7 @@
     dest: /etc/nginx/nginx.conf
     src: nginx.conf.j2
   notify:
-  - Restart nginx
+  - restart nginx
 
 - name: Create nginx service unit for socket activation
   when: openslides_nginx_socket_activation
@@ -194,13 +211,6 @@
   when: createServices.changed or createNginxService or createNginxSocket
   command: systemctl daemon-reload
   become: yes
-
-- name: Start redis
-  become: yes
-  service:
-    name: redis
-    enabled: yes
-    state: started
 
 - name: Start and enalbe openslides
   become: yes

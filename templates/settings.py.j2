@@ -2,8 +2,9 @@ from openslides.global_settings import *
 SECRET_KEY = '{{ openslides_secure_key }}'
 DATABASES = {
   'default': {
-      'ENGINE': 'django.db.backends.sqlite3',
-      'NAME': '{{ openslides_user_data_path }}/database.sqlite',
+      'ENGINE': 'django.db.backends.postgresql',
+      'NAME': 'openslides',
+      'USER': 'postgres',
   }
 }
 MEDIA_ROOT = '{{ openslides_user_data_path }}/media/'
