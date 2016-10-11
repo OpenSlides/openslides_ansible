@@ -60,7 +60,7 @@
     state: directory
     owner: openslides
 
-- name: Create home directory for user openslides, npm needs it...
+- name: Create home directory for user openslides, npm needs it
   when: openslides_use_git
   become: yes
   file:
@@ -78,32 +78,36 @@
     dest: /var/cache/openslides_repo
     version: "{{ openslides_git_branch }}"
 
+
+# TODO The following commented lines where written for ubuntu. If Ubuntu works
+#      without them, then they can be removed
+
 - name: Install npm deps
   when: openslides_use_git and OpenSlidesGit.changed
   become: yes
   become_user: openslides
-  become_method: su  # TO make ubuntu happy
+#  become_method: su  # TO make ubuntu happy
   npm:
     path: /var/cache/openslides_repo
-    ignore_scripts: yes  # There seems to be a problem on ubuntu with our scripts
+#    ignore_scripts: yes  # There seems to be a problem on ubuntu with our scripts
 
-- name: Install bower deps
-  when: openslides_use_git and OpenSlidesGit.changed
-  become: yes
-  become_user: openslides
-  become_method: su  # TO make ubuntu happy
-  bower:
-    path: /var/cache/openslides_repo
-    relative_execpath: node_modules/.bin
-
-- name: Call gulp
-  when: openslides_use_git and OpenSlidesGit.changed
-  become: yes
-  become_user: openslides
-  become_method: su  # TO make ubuntu happy
-  command: /var/cache/openslides_repo/node_modules/.bin/gulp --production
-  args:
-    chdir: /var/cache/openslides_repo/
+# - name: Install bower deps
+#   when: openslides_use_git and OpenSlidesGit.changed
+#   become: yes
+#   become_user: openslides
+#   become_method: su  # TO make ubuntu happy
+#   bower:
+#     path: /var/cache/openslides_repo
+#     relative_execpath: node_modules/.bin
+#
+# - name: Call gulp
+#   when: openslides_use_git and OpenSlidesGit.changed
+#   become: yes
+#   become_user: openslides
+#   become_method: su  # TO make ubuntu happy
+#   command: /var/cache/openslides_repo/node_modules/.bin/gulp --production
+#   args:
+#     chdir: /var/cache/openslides_repo/
 
 - name: Install openslides from repo
   when: openslides_use_git and OpenSlidesGit.changed
@@ -113,12 +117,15 @@
     executable: "{{ pip_executable }}"
     state: latest
 
-- name: Install asgi_redis via pip
+- name: Install big mode requirements via pip
   become: yes
   pip:
-    name: asgi_redis
+    name: "{{ item }}"
     executable: "{{ pip_executable }}"
     state: present
+  with_items:
+  - asgi_redis
+  - django_redis
 
 - name: Create settings path
   become: yes
@@ -150,7 +157,7 @@
 - name: Activate anonymous user
   when: openslidesMigratedDatabase.changed
   become: yes
-  shell: echo "from openslides.core.config import config;config['general_system_enable_anonymous']=True" | {{ openslides_bin }} shell --pythonpath {{ openslides_settings_path }} --settings settings
+  command: "{{ openslides_bin }} changeconfig --pythonpath {{ openslides_settings_path }} --settings settings general_system_enable_anonymous True"
 
 - name: Collect Static
   become: yes

@@ -3,7 +3,7 @@
 openslides_secure_key: false
 
 # The number of worker which should be started. CPU + 1 workers is advised.
-openslides_worker_count: 2
+openslides_worker_count: 5
 
 # If set to true, the global nginx config is rewritten to listen on all hosts.
 openslides_nginx_global: false
@@ -12,8 +12,7 @@ openslides_nginx_global: false
 # openslides_nginx_global is set to true.
 openslides_nginx_domains: []
 
-# Paths where the OpenSlides settings and data like the sqlite database are
-# saved.
+# Paths where the OpenSlides settings and data  are saved.
 openslides_settings_path: /etc/openslides
 openslides_user_data_path: /usr/local/lib/openslides
 
@@ -24,8 +23,7 @@ openslides_port: 8400
 # Port on which nginx listens.
 openslides_nginx_port: 80
 
-# Activate nginx via socket activation. Currently this only works with
-# Archlinux.
+# Activate nginx via socket activation. Currently this only works with Archlinux.
 openslides_nginx_socket_activation: false
 
 # If set to False the stable version of openslides is installed from pypi. If set

@@ -1,14 +1,27 @@
 from openslides.global_settings import *
+
 SECRET_KEY = '{{ openslides_secure_key }}'
 DATABASES = {
-  'default': {
-      'ENGINE': 'django.db.backends.postgresql',
-      'NAME': 'openslides',
-      'USER': 'postgres',
-  }
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'openslides',
+        'USER': 'postgres',
+    }
 }
+
 MEDIA_ROOT = '{{ openslides_user_data_path }}/media/'
 SEARCH_INDEX = '{{ openslides_user_data_path }}/search_index/'
 STATIC_ROOT = '{{ openslides_user_data_path }}/collected_static/'
+SEARCH_INDEX = '{{ openslides_user_data_path }}/search_index/'
 
 CHANNEL_LAYERS['default']['BACKEND'] = 'asgi_redis.RedisChannelLayer'
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/0",
+        "OPTIONS": {
+           "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}

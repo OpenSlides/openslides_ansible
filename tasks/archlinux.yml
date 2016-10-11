@@ -10,13 +10,13 @@
   - sudo
   - redis
   - python-reportlab
-  - python2-psycopg2
-  - python-psycopg2
+  - python2-psycopg2  # Needed for ansible
+  - python-psycopg2  # Needed for OpenSlides
 
 - name: Install postgresql
   pacman:
     name: postgresql
-    update_cache: yes
+    state: present
   register: postgresql_install
 
 - name: Install nginx
@@ -36,7 +36,10 @@
   - git
   - npm
 
-# TODO: locale activieren.
+- name: Set locale
+  locale_gen:
+    name: en_US.UTF-8
+    state: present
 
 - name: Initial postgres database
   command: initdb --locale en_US.UTF-8 -E UTF8 -D /var/lib/postgres/data

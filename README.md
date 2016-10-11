@@ -5,8 +5,8 @@ Presentation and assembly system http://openslides.org
 
 This role installs OpenSlides in "Big Mode". The "Big Mode" is only supported
 in OpenSlides >= 2.1 which is not released yet. There fore you have to Install
-OpenSlides from git by setting the ansible variable ```openslides_use_git``` to
-```true```.
+OpenSlides from git by setting the ansible variable ```openslides_use_git```
+to ```true```.
 
 Requirements
 ------------

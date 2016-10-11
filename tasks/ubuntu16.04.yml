@@ -10,18 +10,13 @@
     name: "{{ item }}"
     state: present
   with_items:
-  - python3-bs4
-  - python3-djangorestframework
-  - python3-html5lib
-  - python3-django-jsonfield
-  - python3-natsort
   - python3-reportlab
-  - python3-roman
   - python3-setuptools
   - python3-whoosh
-  - python3-pypdf2
   - python3-pip
   - redis-server
+
+# TODO: Install and configure postgresql
 
 - name: Install nginx
   when: openslides_nginx_domains or openslides_nginx_global
