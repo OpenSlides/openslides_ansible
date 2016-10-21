@@ -12,6 +12,10 @@
   when: ansible_distribution == "Archlinux"
   include: archlinux.yml
 
+- name: Setup Raspbian
+  when: ansible_distribution == "Debian" and ansible_distribution_major_version == "8"
+  include: raspbian.yml
+
 - name: Check Setup
   when: not openslides_distro_fround
   fail:
@@ -20,7 +24,7 @@
 - name: Start redis
   become: yes
   service:
-    name: redis
+    name: "{{ redis_service }}"
     enabled: yes
     state: started
 
@@ -33,6 +37,7 @@
 
 - name: Create PostgreSQL DB
   become: yes
+  become_user: postgres  # TODO: Added line for raspbian, test this with archlinux
   postgresql_db:
     name: openslides
 
@@ -78,36 +83,30 @@
     dest: /var/cache/openslides_repo
     version: "{{ openslides_git_branch }}"
 
-
-# TODO The following commented lines where written for ubuntu. If Ubuntu works
-#      without them, then they can be removed
-
-- name: Install npm deps
+- name: Install npm deps (this can take some time)
   when: openslides_use_git and OpenSlidesGit.changed
   become: yes
   become_user: openslides
-#  become_method: su  # TO make ubuntu happy
   npm:
     path: /var/cache/openslides_repo
-#    ignore_scripts: yes  # There seems to be a problem on ubuntu with our scripts
+    ignore_scripts: yes  # The scripts have to be called manualy in case the js-files have changed.
 
-# - name: Install bower deps
-#   when: openslides_use_git and OpenSlidesGit.changed
-#   become: yes
-#   become_user: openslides
-#   become_method: su  # TO make ubuntu happy
-#   bower:
-#     path: /var/cache/openslides_repo
-#     relative_execpath: node_modules/.bin
-#
-# - name: Call gulp
-#   when: openslides_use_git and OpenSlidesGit.changed
-#   become: yes
-#   become_user: openslides
-#   become_method: su  # TO make ubuntu happy
-#   command: /var/cache/openslides_repo/node_modules/.bin/gulp --production
-#   args:
-#     chdir: /var/cache/openslides_repo/
+- name: Install bower deps (this can take some time)
+  when: openslides_use_git and OpenSlidesGit.changed
+  become: yes
+  become_user: openslides
+  become_method: su  # TO make ubuntu happy
+  bower:
+    path: /var/cache/openslides_repo
+    relative_execpath: node_modules/.bin
+
+- name: Call gulp
+  when: openslides_use_git and OpenSlidesGit.changed
+  become: yes
+  become_user: openslides
+  command: /var/cache/openslides_repo/node_modules/.bin/gulp --production
+  args:
+    chdir: /var/cache/openslides_repo/
 
 - name: Install openslides from repo
   when: openslides_use_git and OpenSlidesGit.changed

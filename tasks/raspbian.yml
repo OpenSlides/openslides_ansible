@@ -1,37 +1,28 @@
 ---
-# - name: Activate sources
-#   copy:
-#     dest: /etc/apt/sources.list
-#     content: |
-#       deb http://archive.ubuntu.com/ubuntu xenial main restricted universe
-
 - name: Install OpenSlides dependencies
+  become: yes
   apt:
     name: "{{ item }}"
     state: present
+    update_cache: yes
+    cache_valid_time: 3600
   with_items:
-  - python3-reportlab  # Can be removed soon
-  - python3-setuptools
-  - python3-whoosh
-  - python3-pip
   - redis-server
-
-# TODO: Install and configure postgresql
+  - python3-reportlab # Can be removed soon
+  - python-psycopg2  # Needed for ansible
+  - python3-psycopg2  # Needed for OpenSlides
+  - postgresql
+  - postgresql-client
+  - python3-pip
 
 - name: Install nginx
   when: openslides_nginx_domains or openslides_nginx_global
   become: yes
-  register: nginxInstalled
   apt:
     name: nginx
     state: present
-
-- name: Stop and disable nginx, it will be configured later
-  when: nginxInstalled.changed and (openslides_nginx_domains or openslides_nginx_global)
-  service:
-    name: nginx.service
-    state: stopped
-    enabled: no
+    update_cache: yes
+    cache_valid_time: 3600
 
 - name: Install git and development tools
   when: openslides_use_git
@@ -39,9 +30,16 @@
   apt:
     name: "{{ item }}"
     state: present
+    update_cache: yes
+    cache_valid_time: 3600
   with_items:
   - git
   - npm
+
+- name: Set locale
+  locale_gen:
+    name: en_US.UTF-8
+    state: present
 
 - name: Create a symlink from nodejs to node
   when: openslides_use_git

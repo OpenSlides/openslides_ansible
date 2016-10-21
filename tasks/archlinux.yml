@@ -52,3 +52,4 @@
     openslides_distro_fround: true
     openslides_bin: /usr/bin/openslides
     daphne_bin: /usr/bin/daphne
+    redis_service: redis
