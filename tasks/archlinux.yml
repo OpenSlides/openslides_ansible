@@ -1,5 +1,5 @@
 ---
-- name: Install OpenSlides Dependencies
+- name: Install OpenSlides dependencies
   become: yes
   become_method: su
   pacman:
@@ -9,7 +9,7 @@
   with_items:
   - sudo
   - redis
-  - python-reportlab
+  - python-reportlab # Can be removed soon
   - python2-psycopg2  # Needed for ansible
   - python-psycopg2  # Needed for OpenSlides
 

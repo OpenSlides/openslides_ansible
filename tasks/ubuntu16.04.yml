@@ -5,12 +5,12 @@
 #     content: |
 #       deb http://archive.ubuntu.com/ubuntu xenial main restricted universe
 
-- name: Install OpenSlides Dependencies
+- name: Install OpenSlides dependencies
   apt:
     name: "{{ item }}"
     state: present
   with_items:
-  - python3-reportlab
+  - python3-reportlab  # Can be removed soon
   - python3-setuptools
   - python3-whoosh
   - python3-pip
