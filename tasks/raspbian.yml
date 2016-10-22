@@ -15,6 +15,20 @@
   - postgresql-client
   - python3-pip
 
+- name: Configure postgresql
+  become: yes
+  lineinfile:
+    dest: /etc/postgresql/9.4/main/pg_hba.conf
+    state: present
+    line: host all all 127.0.0.1/32 trust
+
+- name: Set postgres password
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    name: postgres
+    password: postgres
+
 - name: Install nginx
   when: openslides_nginx_domains or openslides_nginx_global
   become: yes
@@ -23,6 +37,19 @@
     state: present
     update_cache: yes
     cache_valid_time: 3600
+
+# Needed for html5lib. Can be removed soon
+- name: Install newser setuptools version
+  become: yes
+  pip:
+    name: setuptools
+    executable: "pip3"
+    version: 27
+
+- name: Add source for newer node source
+  when: openslides_use_git
+  become: yes
+  shell: curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
 
 - name: Install git and development tools
   when: openslides_use_git
@@ -34,7 +61,7 @@
     cache_valid_time: 3600
   with_items:
   - git
-  - npm
+  - nodejs
 
 - name: Set locale
   locale_gen:
@@ -55,3 +82,4 @@
     openslides_bin: /usr/local/bin/openslides
     daphne_bin: /usr/local/bin/daphne
     redis_service: redis-server
+    postgres_connection: host

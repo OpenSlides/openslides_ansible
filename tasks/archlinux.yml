@@ -53,3 +53,4 @@
     openslides_bin: /usr/bin/openslides
     daphne_bin: /usr/bin/daphne
     redis_service: redis
+    postgres_connection: local

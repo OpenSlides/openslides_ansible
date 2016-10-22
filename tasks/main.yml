@@ -84,7 +84,7 @@
     version: "{{ openslides_git_branch }}"
 
 - name: Install npm deps (this can take some time)
-  when: openslides_use_git and OpenSlidesGit.changed
+  when: openslides_use_git
   become: yes
   become_user: openslides
   npm:
@@ -92,7 +92,7 @@
     ignore_scripts: yes  # The scripts have to be called manualy in case the js-files have changed.
 
 - name: Install bower deps (this can take some time)
-  when: openslides_use_git and OpenSlidesGit.changed
+  when: openslides_use_git
   become: yes
   become_user: openslides
   become_method: su  # TO make ubuntu happy
@@ -108,23 +108,26 @@
   args:
     chdir: /var/cache/openslides_repo/
 
-- name: Install openslides from repo
-  when: openslides_use_git and OpenSlidesGit.changed
+- name: Install openslides from repo (this can take some time)
+  when: openslides_use_git
   become: yes
   pip:
     name: file:///var/cache/openslides_repo
     executable: "{{ pip_executable }}"
-    state: latest
+    state: present
 
 - name: Install big mode requirements via pip
   become: yes
   pip:
     name: "{{ item }}"
     executable: "{{ pip_executable }}"
-    state: present
+    state: latest
   with_items:
   - asgi_redis
   - django_redis
+  - autobahn  # this should be automaticly installed with channels. Maybe a channels bug?
+  - msgpack-python  # this should be automaticly installed with channels. Maybe a channels bug?
+  - six  # this should be automaticly installed with channels. Maybe a channels bug?
 
 - name: Create settings path
   become: yes
