@@ -95,8 +95,6 @@
   when: openslides_use_git
   become: yes
   become_user: openslides
-  # become_method: su  # TO make ubuntu happy
-  # not for raspbian..
   bower:
     path: /var/cache/openslides_repo
     relative_execpath: node_modules/.bin
