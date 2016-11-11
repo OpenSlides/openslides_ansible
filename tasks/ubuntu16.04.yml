@@ -10,7 +10,6 @@
     name: "{{ item }}"
     state: present
   with_items:
-  - python3-reportlab  # Can be removed soon
   - python3-setuptools
   - python3-whoosh
   - python3-pip
