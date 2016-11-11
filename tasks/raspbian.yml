@@ -8,7 +8,6 @@
     cache_valid_time: 3600
   with_items:
   - redis-server
-  - python3-reportlab # Can be removed soon
   - python-psycopg2  # Needed for ansible
   - python3-psycopg2  # Needed for OpenSlides
   - postgresql

@@ -9,7 +9,6 @@
   with_items:
   - sudo
   - redis
-  - python-reportlab # Can be removed soon
   - python2-psycopg2  # Needed for ansible
   - python-psycopg2  # Needed for OpenSlides
 
