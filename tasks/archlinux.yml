@@ -11,6 +11,7 @@
   - redis
   - python2-psycopg2  # Needed for ansible
   - python-psycopg2  # Needed for OpenSlides
+  - python-pip
 
 - name: Install postgresql
   pacman:
@@ -42,7 +43,8 @@
 
 - name: Initial postgres database
   command: initdb --locale en_US.UTF-8 -E UTF8 -D /var/lib/postgres/data
-  when: postgresql_install.changed
+  args:
+    creates: /var/lib/postgres/data/PG_VERSION
   become: yes
   become_user: postgres
 

@@ -5,6 +5,16 @@ openslides_secure_key: false
 # The number of worker which should be started. CPU + 1 workers is advised.
 openslides_worker_count: 5
 
+# List of ports on which openslides listens. The ansible script will start as
+# many daphne servers as entries are in this list.
+# This ports should never we used directly but only from nginx.
+openslides_ports:
+- 8400
+- 8401
+- 8402
+- 8403
+- 8404
+
 # If set to true, the global nginx config is rewritten to listen on all hosts.
 openslides_nginx_global: false
 
@@ -15,10 +25,6 @@ openslides_nginx_domains: []
 # Paths where the OpenSlides settings and data  are saved.
 openslides_settings_path: /etc/openslides
 openslides_user_data_path: /usr/local/lib/openslides
-
-# Port on which openslides listens. This port should never we used directly but
-# only from nginx.
-openslides_port: 8400
 
 # Port on which nginx listens.
 openslides_nginx_port: 80
@@ -34,3 +40,7 @@ openslides_use_git: false
 # and the branch which is used.
 openslides_git_repo: https://github.com/OpenSlides/OpenSlides.git
 openslides_git_branch: master
+
+# Only used if openslides_use_git is set to False. Specifies the OpenSlides
+# version to install. Use an empty string for the newest stable version.
+openslides_version: ""

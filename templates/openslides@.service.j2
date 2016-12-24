@@ -10,7 +10,7 @@ Requires=openslides_worker@{{ i }}.service
 [Service]
 Environment=PYTHONPATH={{ openslides_settings_path }}
 Environment=DJANGO_SETTINGS_MODULE=settings
-ExecStart={{ daphne_bin }} openslides.asgi:channel_layer -p {{ openslides_port }}
+ExecStart={{ daphne_bin }} openslides.asgi:channel_layer -p %i
 NonBlocking=true
 User=openslides
 

@@ -9,6 +9,9 @@ http {
   default_type application/octet-stream;
   sendfile on;
   keepalive_timeout 65;
+
+  {% include 'nginx_upstream.j2' %}
+
   server {
     listen 0.0.0.0:{{ openslides_nginx_port }};
     #listen [::]:{{ openslides_nginx_port}};

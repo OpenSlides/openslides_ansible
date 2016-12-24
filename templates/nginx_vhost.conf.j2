@@ -1,3 +1,5 @@
+{% include 'nginx_upstream.j2' %}
+
 server {
     server_name {{ openslides_nginx_domains|join(' ') }};
     listen 0.0.0.0:{{ openslides_nginx_port }};

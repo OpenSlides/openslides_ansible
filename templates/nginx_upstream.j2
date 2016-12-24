@@ -1,0 +1,5 @@
+upstream openslides {
+  {% for port in openslides_ports %}
+    server 127.0.0.1:{{ port }};
+  {% endfor %}
+}

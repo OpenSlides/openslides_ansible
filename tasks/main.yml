@@ -56,6 +56,7 @@
     name: openslides
     executable: "{{ pip_executable }}"
     state: present
+    version: "{{ openslides_version }}"
 
 - name: Create directory for openslides_repo
   when: openslides_use_git
@@ -124,6 +125,7 @@
   with_items:
   - asgi_redis
   - django_redis
+  - django-redis-sessions
   - autobahn  # this should be automaticly installed with channels. Maybe a channels bug?
   - msgpack-python  # this should be automaticly installed with channels. Maybe a channels bug?
   - six  # this should be automaticly installed with channels. Maybe a channels bug?
@@ -174,9 +176,10 @@
     dest: /etc/systemd/system/{{ item }}
     src: "{{ item }}.j2"
   with_items:
-  - openslides.service
+  - openslides@.service
   - openslides_worker@.service
   # See https://github.com/andrewgodwin/daphne/issues/17
+  # It is in the master now. Wait for the 0.16 release
   # - openslides.socket
 
 - name: Create nginx vhost config
@@ -223,9 +226,10 @@
 - name: Start and enalbe openslides
   become: yes
   service:
-    name: openslides.service
+    name: openslides@{{ item }}.service
     enabled: yes
     state: started
+  with_items: "{{ openslides_ports }}"
 
 - name: Start and enalbe nginx via socket activation
   when: openslides_nginx_socket_activation
